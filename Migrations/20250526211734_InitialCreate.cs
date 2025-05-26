@@ -40,6 +40,21 @@ namespace ContactApp.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Imie = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "TEXT", nullable: false),
+                    HasloHash = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Contacts",
                 columns: table => new
                 {
@@ -92,6 +107,11 @@ namespace ContactApp.Api.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "Id", "Email", "HasloHash", "Imie" },
+                values: new object[] { 1, "jan@example.com", "haslo123", "Jan" });
+
+            migrationBuilder.InsertData(
                 table: "Contacts",
                 columns: new[] { "Id", "DataUrodzenia", "Email", "HasloHash", "Imie", "KategoriaId", "Nazwisko", "PodkategoriaId", "Telefon" },
                 values: new object[,]
@@ -123,6 +143,9 @@ namespace ContactApp.Api.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Contacts");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "ContactCategories");

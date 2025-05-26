@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContactApp.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250526113713_InitialCreate")]
+    [Migration("20250526211734_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -141,6 +141,39 @@ namespace ContactApp.Api.Migrations
                         {
                             Id = 3,
                             Nazwa = "Inny"
+                        });
+                });
+
+            modelBuilder.Entity("ContactApp.Api.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HasloHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Imie")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Email = "jan@example.com",
+                            HasloHash = "haslo123",
+                            Imie = "Jan"
                         });
                 });
 

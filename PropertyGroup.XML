@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace>ContactApp.Api</RootNamespace>
+		<CopyContentToOutput>true</CopyContentToOutput>
+		<EnableStaticFiles>true</EnableStaticFiles>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="8.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.5" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Update="wwwroot\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+</Project>

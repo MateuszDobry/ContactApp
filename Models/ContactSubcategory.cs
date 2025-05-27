@@ -1,4 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using ContactApp.Api.Models;
+using System.ComponentModel.DataAnnotations.Schema;
+
+
 public class ContactSubcategory
 {
     [Key]
@@ -6,13 +10,10 @@ public class ContactSubcategory
 
     [Required]
     [MaxLength(50)]
-    public string Nazwa { get; set; } // Np. "Szef", "Klient", "Wspó³pracownik"
+    public string Nazwa { get; set; }
 
-    // Opcjonalnie: Mo¿na dodaæ klucz obcy do ContactCategory,
-    // aby powi¹zaæ podkategorie z konkretnymi kategoriami
-    /*
-     public int? KategoriaId { get; set; }
-     [ForeignKey("KategoriaId")]
-     public ContactCategory Kategoria { get; set; }
-    */
+    public int? KategoriaId { get; set; }
+
+    [ForeignKey("KategoriaId")]
+    public virtual ContactCategory Kategoria { get; set; }
 }

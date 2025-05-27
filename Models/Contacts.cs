@@ -7,6 +7,17 @@ namespace ContactApp.Api.Models
     // Reprezentuje pojedynczy kontakt w bazie danych
     public class Contact
     {
+        public Contact()
+        {
+            Imie = string.Empty;
+            Nazwisko = string.Empty;
+            Email = string.Empty;
+            HasloHash = string.Empty;
+            Telefon = string.Empty;
+            DataUrodzenia = null;
+        }
+
+
         [Key] // Klucz g³ówny
         public int Id { get; set; }
 

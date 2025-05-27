@@ -141,83 +141,153 @@
         </div>
     </div>
 
-    <div id="contact-form" class="hidden mt-8">
-        <!-- ... (pozostały kod formularza) ... -->
-        <p>Formularz edycji</p>
-    </div>
+    
+        <div id="contact-form" class="hidden mt-8 bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+            <h2 id="form-title" class="text-xl font-bold mb-4">Dodaj nowy kontakt</h2>
+            <form id="contact-edit-form" class="space-y-4">
+                <input type="hidden" id="contact-id">
 
-    <script>
-        const API_BASE_URL = 'http://localhost:5252';
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Imię</label>
+                    <input type="text" id="imie" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                </div>
 
-        // Sprawdza czy użytkownik jest zalogowany
-        function isLoggedIn() {
-            return localStorage.getItem('user') !== null;
-        }
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nazwisko</label>
+                    <input type="text" id="nazwisko" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                </div>
 
-        // Ukrywa/pokazuje przyciski dostępne tylko dla zalogowanych
-        function checkAuth() {
-            const addContactBtn = document.getElementById('add-contact-button');
-            if (isLoggedIn()) {
-                addContactBtn?.classList.remove('hidden');
-            } else {
-                addContactBtn?.classList.add('hidden');
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Hasło</label>
+                    <input type="password" id="haslo" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Kategoria</label>
+                    <select id="kategoria-id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                        <!-- Wczytane dynamicznie -->
+                    </select>
+                </div>
+
+                <div id="podkategoria-container" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Podkategoria</label>
+                    <select id="podkategoria-id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                        <!-- Wczytane dynamicznie -->
+                    </select>
+                </div>
+
+                <div id="podkategoria-input-container" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Inna podkategoria</label>
+                    <input type="text" id="podkategoria-inna" placeholder="Wpisz własną podkategorię" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Telefon</label>
+                    <input type="tel" id="telefon" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data urodzenia</label>
+                    <input type="date" id="data-urodzenia" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500">
+                </div>
+
+                <div class="flex space-x-2 pt-4">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Zapisz</button>
+                    <button type="button" onclick="hideForm()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Anuluj</button>
+                </div>
+            </form>
+        </div>
+   
+
+        <script>
+            const API_BASE_URL = 'http://localhost:5252';
+            let categories = [];
+            let subcategories = [];
+
+            function isLoggedIn() {
+                return localStorage.getItem('user') !== null;
             }
-        }
 
-        // Pobiera listę kontaktów z API
-        async function fetchContacts() {
-            const loadingState = document.getElementById('loading-state');
-            const contactListDiv = document.getElementById('contact-list');
-
-            loadingState.classList.remove('hidden');
-            contactListDiv.innerHTML = '';
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/Contacts`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const contacts = await response.json();
-
-                loadingState.classList.add('hidden');
-
-                if (!contacts || contacts.length === 0) {
-                    contactListDiv.innerHTML = '<div class="empty-state">Brak kontaktów do wyświetlenia.</div>';
-                    return;
+            function checkAuth() {
+                const addContactBtn = document.getElementById('add-contact-button');
+                if (isLoggedIn()) {
+                    addContactBtn?.classList.remove('hidden');
+                } else {
+                    addContactBtn?.classList.add('hidden');
                 }
-
-                contacts.forEach(contact => {
-                    const contactItem = document.createElement('div');
-                    contactItem.classList.add('contact-item');
-                    contactItem.innerHTML = `
-                        <div>
-                            <h3>${contact.imie} ${contact.nazwisko}</h3>
-                            <p>${contact.email}</p>
-                        </div>
-                        <span>${contact.kategoria ? contact.kategoria.nazwa : 'Brak kategorii'}</span>
-                    `;
-                    contactItem.onclick = () => displayContactDetails(contact.id);
-                    contactListDiv.appendChild(contactItem);
-                });
-
-            } catch (error) {
-                console.error('Błąd:', error);
-                contactListDiv.innerHTML = `<div class="empty-state text-red-500">Nie udało się załadować kontaktów</div>`;
             }
-        }
 
-        // Wyświetla szczegóły kontaktu
-        async function displayContactDetails(contactId) {
-            const detailsDiv = document.getElementById('contact-details');
-            const detailsContentDiv = document.getElementById('details-content');
+            async function fetchContacts() {
+                const loadingState = document.getElementById('loading-state');
+                const contactListDiv = document.getElementById('contact-list');
 
-            detailsDiv.classList.remove('hidden');
-            detailsContentDiv.innerHTML = '<p class="text-center text-gray-500">Ładowanie szczegółów...</p>';
+                loadingState.classList.remove('hidden');
+                contactListDiv.innerHTML = '';
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/Contacts/${contactId}`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const contact = await response.json();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/Contacts`);
+                    const contacts = await response.json();
 
-                detailsContentDiv.innerHTML = `
+                    loadingState.classList.add('hidden');
+
+                    if (!contacts.length) {
+                        contactListDiv.innerHTML = '<div class="empty-state">Brak kontaktów</div>';
+                        return;
+                    }
+
+                    contacts.forEach(contact => {
+                        const item = document.createElement('div');
+                        item.className = 'contact-item';
+                        item.innerHTML = `
+                            <div>
+                                <h3>${contact.imie} ${contact.nazwisko}</h3>
+                                <p>${contact.email}</p>
+                            </div>
+                            <span>${contact.kategoria ? contact.kategoria.nazwa : 'Brak kategorii'}</span>
+                        `;
+                        item.onclick = () => displayContactDetails(contact.id);
+                        contactListDiv.appendChild(item);
+                    });
+
+                } catch (error) {
+                    console.error('Błąd:', error);
+                    contactListDiv.innerHTML = `<div class="empty-state text-red-500">Nie udało się załadować kontaktów</div>`;
+                }
+            }
+
+            async function displayContactDetails(contactId) {
+                const detailsDiv = document.getElementById('contact-details');
+                const detailsContentDiv = document.getElementById('details-content');
+
+                detailsDiv.classList.remove('hidden');
+                detailsContentDiv.innerHTML = '<p class="text-center text-gray-500">Ładowanie szczegółów...</p>';
+
+                try {
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    const token = user?.token;
+
+                    if (!token) {
+                        throw new Error("Brak tokenu autoryzacji");
+                    }
+                    console.log("Token:", token); // Sprawdź czy token istnieje
+                    const response = await fetch(`${API_BASE_URL}/api/Contacts/${contactId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const contact = await response.json();
+
+                    detailsContentDiv.innerHTML = `
                     <div class="detail-row">
                         <span class="detail-label">Imię:</span>
                         <span class="detail-value">${contact.imie}</span>
@@ -247,49 +317,136 @@
                         <span class="detail-value">${contact.dataUrodzenia ? new Date(contact.dataUrodzenia).toLocaleDateString('pl-PL') : 'Brak'}</span>
                     </div>
                 `;
-
-            } catch (error) {
-                console.error('Błąd podczas pobierania szczegółów kontaktu:', error);
-                detailsContentDiv.innerHTML = `<p class="text-center text-red-500">Nie udało się załadować szczegółów kontaktu</p>`;
+                } catch (error) {
+                    console.error('Błąd podczas pobierania szczegółów kontaktu:', error);
+                    detailsContentDiv.innerHTML = `<p class="text-center text-red-500">Nie udało się załadować szczegółów kontaktu</p>`;
+                }
             }
-        }
 
-        // Obsługa logowania
-        async function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+            async function handleLogin(event) {
+                event.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
 
-            const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, haslo: password })
+                const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, haslo: password })
+                });
+
+                const errorText = document.getElementById('login-error');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('user', JSON.stringify(data)); // Zapisujemy dane użytkownika
+                    errorText.classList.add('hidden');
+                    checkAuth(); // Odśwież widok
+                } else {
+                    errorText.textContent = 'Nieprawidłowy email lub hasło';
+                    errorText.classList.remove('hidden');
+                }
+            }
+
+            async function saveContact(event) {
+                event.preventDefault();
+                if (!isLoggedIn()) {
+                    alert("Musisz się zalogować, aby dodać kontakt.");
+                    return;
+                }
+
+                const contact = {
+                    imie: document.getElementById('imie').value,
+                    nazwisko: document.getElementById('nazwisko').value,
+                    email: document.getElementById('email').value,
+                    hasloHash: document.getElementById('haslo').value,
+                    kategoriaId: parseInt(document.getElementById('kategoria-id').value),
+                    telefon: document.getElementById('telefon').value,
+                    dataUrodzenia: document.getElementById('data-urodzenia').value ? new Date(document.getElementById('data-urodzenia').value) : null,
+                };
+
+                const selectedCategoryId = contact.kategoriaId;
+                if (selectedCategoryId === 1 && document.getElementById('podkategoria-id')) {
+                    contact.podkategoriaId = parseInt(document.getElementById('podkategoria-id').value);
+                } else if (selectedCategoryId === 3 && document.getElementById('podkategoria-inna')) {
+                    contact.podkategoriaInna = document.getElementById('podkategoria-inna').value;
+                }
+
+                const user = JSON.parse(localStorage.getItem('user'));
+                const token = user?.token;
+
+                const response = await fetch(`${API_BASE_URL}/api/Contacts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // Dodaj token tutaj
+                    },
+                    body: JSON.stringify(contact)
+                });
+
+                if (response.ok) {
+                    hideForm();
+                    fetchContacts(); // Odśwież listę kontaktów
+                } else {
+                    alert("Nie udało się zapisać kontaktu");
+                }
+            }
+
+            function showAddForm() {
+                if (!isLoggedIn()) {
+                    alert("Musisz się zalogować, aby dodać kontakt.");
+                    return;
+                }
+
+                document.getElementById('form-title').textContent = 'Dodaj nowy kontakt';
+                document.getElementById('contact-edit-form').reset();
+                document.getElementById('contact-id').value = '';
+                document.getElementById('delete-button')?.classList.add('hidden');
+                document.getElementById('contact-form').classList.remove('hidden');
+            }
+
+            function hideForm() {
+                document.getElementById('contact-form').classList.add('hidden');
+            }
+
+            async function fetchCategoriesAndSubcategories() {
+                const catRes = await fetch(`${API_BASE_URL}/api/ContactCategories`);
+                const subcatRes = await fetch(`${API_BASE_URL}/api/ContactSubcategories`);
+
+                categories = await catRes.json();
+                subcategories = await subcatRes.json();
+
+                const select = document.getElementById('kategoria-id');
+                select.innerHTML = categories.map(cat => `<option value="${cat.id}">${cat.nazwa}</option>`).join('');
+            }
+
+            async function loadSubcategoriesIntoForm() {
+                const podkategoriaSelect = document.getElementById('podkategoria-id');
+                if (!podkategoriaSelect) return;
+                podkategoriaSelect.innerHTML = subcategories.map(sc => `<option value="${sc.id}">${sc.nazwa}</option>`).join('');
+            }
+
+            function setupCategoryChangeHandler() {
+                const kategoriaSelect = document.getElementById('kategoria-id');
+                const podkategoriaContainer = document.getElementById('podkategoria-container');
+                const podkategoriaInputContainer = document.getElementById('podkategoria-input-container');
+
+                kategoriaSelect.addEventListener('change', () => {
+                    const id = parseInt(kategoriaSelect.value);
+                    podkategoriaContainer.classList.toggle('hidden', id !== 1);
+                    podkategoriaInputContainer.classList.toggle('hidden', id !== 3);
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                    fetchCategoriesAndSubcategories().then(loadSubcategoriesIntoForm).then(setupCategoryChangeHandler);
+                    fetchContacts();
+                    checkAuth();
+                    document.getElementById('login')?.addEventListener('submit', handleLogin);
+                    document.getElementById('contact-edit-form')?.addEventListener('submit', saveContact);
             });
-
-            const errorText = document.getElementById('login-error');
-
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('user', JSON.stringify(data));
-                errorText.classList.add('hidden');
-                checkAuth();
-            } else {
-                errorText.textContent = 'Nieprawidłowy email lub hasło';
-                errorText.classList.remove('hidden');
-            }
-        }
-
-        // Pokaż formularz dodawania kontaktu (na razie tylko alert)
-        function showAddForm() {
-            alert("Formularz dodawania kontaktu będzie dostępny po implementacji.");
-        }
-
-        // Inicjalizacja
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchContacts();
-            checkAuth();
-            document.getElementById('login')?.addEventListener('submit', handleLogin);
-        });
-    </script>
+             
+            
+            
+        </script>
 </body>
 </html>

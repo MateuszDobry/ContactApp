@@ -1,83 +1,101 @@
-using ContactApp.Api.Data;
+ï»¿using ContactApp.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
-using Swashbuckle.AspNetCore.Swagger;
-// Dodaj dyrektywê using dla plików statycznych
-using Microsoft.Extensions.FileProviders; // <-- Nowa linia
-using System.IO; // <-- Nowa linia
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Dodaj us³ugi do kontenera DI.
+// âœ… Dodaj usÅ‚ugi tutaj â€” PRZED builder.Build()
 
 // Konfiguracja bazy danych SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
            .UseLazyLoadingProxies());
 
-// Dodaj kontrolery API
+// Kontrolery API
 builder.Services.AddControllers();
 
-// Dodaj Swagger/OpenAPI (dla testowania API)
+// Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Konfiguracja CORS (Cross-Origin Resource Sharing)
+// CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
-        builder => builder.AllowAnyOrigin()
-                         .AllowAnyHeader()
-                         .AllowAnyMethod());
+    options.AddPolicy("AllowAllOrigins", policy =>
+        policy.AllowAnyOrigin()
+             .AllowAnyHeader()
+             .AllowAnyMethod());
 });
 
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
 
+        ValidIssuer = "ContactApp",
+        ValidAudience = "ContactApp",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            builder.Configuration["Jwt:Secret"] ?? "your-secret-key-here-that-is-long-enough-at-least-32-chars"
+        ))
+    };
+});
+
+// Authorization
+builder.Services.AddAuthorization();
+
+// âœ… Teraz tworzymy aplikacjÄ™
 var app = builder.Build();
 
-// Konfiguracja potoku ¿¹dañ HTTP.
+// âœ… Middleware'y dopiero TU, po Build()
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Przekierowanie HTTP na HTTPS
-//app.UseHttpsRedirection();
-
-// U¿yj polityki CORS "AllowAllOrigins"
-app.UseCors("AllowAllOrigins");
-
-// W³¹cz routing
+app.UseHttpsRedirection();
 app.UseRouting();
+app.UseCors("AllowAllOrigins");
+app.UseAuthentication(); // Musi byÄ‡ po UseRouting()
+app.UseAuthorization();
 
-// Autoryzacja (na póŸniej)
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseDefaultFiles(); // Serwowanie plikÃ³w statycznych
+app.UseStaticFiles();
 
-// --- WA¯NE: Dodaj te linie do serwowania plików statycznych ---
-// W³¹cz serwowanie plików statycznych z folderu wwwroot
-app.UseDefaultFiles(); // Pozwala na serwowanie index.html jako domyœlnego pliku
-app.UseStaticFiles();  // W³¹cza serwowanie plików statycznych
-
-// Jeœli chcesz serwowaæ pliki z innego miejsca ni¿ wwwroot, mo¿esz u¿yæ:
-// app.UseStaticFiles(new StaticFileOptions
-// {
-//     FileProvider = new PhysicalFileProvider(
-//         Path.Combine(builder.Environment.ContentRootPath, "œcie¿ka_do_twojego_frontendu")),
-//     RequestPath = "/frontend" // Dostêpne np. pod /frontend/index.html
-// });
-// ------------------------------------------------------------------
-
-// Mapowanie kontrolerów API
 app.MapControllers();
 
-// Inicjalizacja bazy danych i migracje przy starcie aplikacji
+// Inicjalizacja bazy danych i migracje
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate(); // Automatyczne stosowanie migracji
+    try
+    {
+        dbContext.Database.Migrate(); // Automatyczne stosowanie migracji
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
 }
 
 app.Run();

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ContactApp.Api.Models
 {
-    // Reprezentuje pojedynczy kontakt w bazie danych
+    // Represents an individual contact record in the database
     public class Contact
     {
         public Contact()
@@ -17,45 +17,45 @@ namespace ContactApp.Api.Models
             DataUrodzenia = null;
         }
 
-
-        [Key] // Klucz g³ówny
+        [Key] // Primary key
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Imiê jest wymagane.")] // Wymagane pole
-        [MaxLength(100)] // Maksymalna d³ugoœæ
+        [Required(ErrorMessage = "First name is required.")]
+        [MaxLength(100)]
         public string Imie { get; set; }
 
-        [Required(ErrorMessage = "Nazwisko jest wymagane.")]
+        [Required(ErrorMessage = "Last name is required.")]
         [MaxLength(100)]
         public string Nazwisko { get; set; }
 
-        [Required(ErrorMessage = "Adres email jest wymagany.")]
-        [EmailAddress(ErrorMessage = "Nieprawid³owy format adresu email.")] // Walidacja formatu formatu email
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
         [MaxLength(255)]
         public string Email { get; set; }
 
-        // Has³o bêdzie przechowywane w postaci zahashowanej
-        [Required(ErrorMessage = "Has³o jest wymagane.")]
-        public string HasloHash { get; set; } // Zmieniono nazwê na HasloHash dla jasnoœci
+        // Stores the password as a hashed value for security
+        [Required(ErrorMessage = "Password is required.")]
+        public string HasloHash { get; set; }
 
-        [Required(ErrorMessage = "Kategoria jest wymagana.")]
-        public int KategoriaId { get; set; } // Klucz obcy do tabeli Kategoria
+        // Foreign key to ContactCategory
+        [Required(ErrorMessage = "Category is required.")]
+        public int KategoriaId { get; set; }
 
-        [ForeignKey("KategoriaId")] // Definicja klucza obcego
-        public virtual ContactCategory Kategoria { get; set; } // Dodano s³owo kluczowe 'virtual'
+        [ForeignKey("KategoriaId")]
+        public virtual ContactCategory Kategoria { get; set; }
 
-        // Podkategoria mo¿e byæ opcjonalna lub zale¿na od kategorii
-        public int? PodkategoriaId { get; set; } // Klucz obcy do tabeli Podkategoria (mo¿e byæ null)
+        // Optional foreign key to subcategory
+        public int? PodkategoriaId { get; set; }
 
         [ForeignKey("PodkategoriaId")]
-        public virtual ContactSubcategory Podkategoria { get; set; } // Dodano s³owo kluczowe 'virtual'
+        public virtual ContactSubcategory Podkategoria { get; set; }
 
-        [Phone(ErrorMessage = "Nieprawid³owy format numeru telefonu.")] // Walidacja formatu telefonu
+        [Phone(ErrorMessage = "Invalid phone number format.")]
         [MaxLength(20)]
         public string Telefon { get; set; }
 
-        [DataType(DataType.Date)] // Typ danych daty
+        [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-        public DateTime? DataUrodzenia { get; set; } // Data urodzenia (mo¿e byæ null)
+        public DateTime? DataUrodzenia { get; set; }
     }
 }

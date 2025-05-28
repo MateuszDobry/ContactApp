@@ -10,91 +10,96 @@ using System.Text;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Dodaj usługi tutaj — PRZED builder.Build()
 
-// Konfiguracja bazy danych SQLite
+// Configuration of SQLite database context for Entity Framework Core
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .UseLazyLoadingProxies());
+           .UseLazyLoadingProxies()); // Enables lazy loading for navigation properties
 
-// Kontrolery API
+// Add controllers to the service collection for handling API requests
 builder.Services.AddControllers();
 
-// Swagger/OpenAPI
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Configuration of Swagger
+builder.Services.AddEndpointsApiExplorer(); // Enables API explorer for Swagger
+builder.Services.AddSwaggerGen(); // Adds Swagger generation services
 
-// CORS
+// Configuration of Cross-Origin Resource Sharing (CORS) policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins", policy =>
-        policy.AllowAnyOrigin()
-             .AllowAnyHeader()
-             .AllowAnyMethod());
+    options.AddPolicy("AllowAllOrigins", policy => // Defines a CORS policy 
+        policy.AllowAnyOrigin()    
+              .AllowAnyHeader()   
+              .AllowAnyMethod());  // Allows any HTTP methods (GET, POST, PUT, DELETE, etc.)
 });
 
-// JWT Authentication
+// Configuration of JWT (JSON Web Token) Authentication
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // Sets default authentication scheme
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;    // Sets default challenge scheme for unauthorized requests
 })
-.AddJwtBearer(options =>
+.AddJwtBearer(options => // Configurating JWT Bearer specific options
 {
-    options.TokenValidationParameters = new TokenValidationParameters
+    options.TokenValidationParameters = new TokenValidationParameters // Defining how the JWT token should be validated
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
+        ValidateIssuer = true,          
+        ValidateAudience = true,        
+        ValidateLifetime = true,       
         ValidateIssuerSigningKey = true,
 
-        ValidIssuer = "ContactApp",
-        ValidAudience = "ContactApp",
+        ValidIssuer = "ContactApp",     // Expected issuer of the token (must match token generation)
+        ValidAudience = "ContactApp",   // Expected audience of the token (must match token generation)
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            builder.Configuration["Jwt:Secret"] ?? "your-secret-key-here-that-is-long-enough-at-least-32-chars"
+            builder.Configuration["Jwt:Secret"] ?? "your-secret-key-here-that-is-long-enough-at-least-32-chars" // Key for signing/validating
         ))
     };
 });
 
-// Authorization
+
 builder.Services.AddAuthorization();
 
-// ✅ Teraz tworzymy aplikację
+// Build the application pipeline.
 var app = builder.Build();
 
-// ✅ Middleware'y dopiero TU, po Build()
+
+// Enable Swagger UI in development environment for API documentation
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger();     // Serves the Swagger JSON document
+    app.UseSwaggerUI();   
 }
 
-app.UseHttpsRedirection();
-app.UseRouting();
-app.UseCors("AllowAllOrigins");
-app.UseAuthentication(); // Musi być po UseRouting()
-app.UseAuthorization();
+app.UseHttpsRedirection(); // Redirects HTTP requests to HTTPS
 
-app.UseDefaultFiles(); // Serwowanie plików statycznych
-app.UseStaticFiles();
+app.UseRouting(); // Adds endpoint routing to the pipeline.
 
-app.MapControllers();
+app.UseCors("AllowAllOrigins"); 
 
-// Inicjalizacja bazy danych i migracje
+app.UseAuthentication(); 
+app.UseAuthorization();  
+
+app.UseDefaultFiles(); // Enables serving default file names e.g., index.html, for requests to a directory
+app.UseStaticFiles();  // Enables serving static files (CSS, JavaScript, images) from wwwroot
+
+app.MapControllers(); // Maps controller actions to incoming requests
+
+// Database initialization and migrations
+// This block ensures the database is created and migrations are applied on application startup.
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     try
     {
-        dbContext.Database.Migrate(); // Automatyczne stosowanie migracji
+        dbContext.Database.Migrate(); // Applies any pending migrations to the database
     }
     catch (Exception ex)
     {
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "An error occurred while migrating the database."); 
     }
 }
 

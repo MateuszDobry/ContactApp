@@ -1,26 +1,33 @@
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-using ContactApp.Api.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; 
+using ContactApp.Api.Data; 
 
 namespace ContactApp.Api.Models
 {
     public class User
     {
+   
+        // Gets or sets the unique identifier for the user.
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        public string Imie { get; set; } = string.Empty;
+   
+        [Required] // Ensures the 'Imie' (First Name) field is not null or empty.
+        [MaxLength(100)] 
+        public string Imie { get; set; } = string.Empty; 
+
 
         [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        [EmailAddress] // Validates the email format.
+        public string Email { get; set; } = string.Empty; 
 
-        [Required]
-        public string HasloHash { get; set; } = string.Empty;
+        [Required] 
+        public string HasloHash { get; set; } = string.Empty; 
 
-        // Brakuj¹ca w³aœciwoœæ - dodaj j¹
-        public string Haslo => HasloHash;  // Jeœli chcesz u¿ywaæ Haslo jako alias
+        // This property is a computed property, meaning it doesn't have a backing field in the database.
+        // It simply returns the value of 'HasloHash'. This might be an artifact of renaming
+        // from 'Haslo' to 'HasloHash' for clarity on password security,
+        // while still allowing 'Haslo' to be referenced in existing code.
+        public string Haslo => HasloHash;
     }
 }

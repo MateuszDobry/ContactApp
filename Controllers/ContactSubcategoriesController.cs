@@ -17,9 +17,11 @@ namespace ContactApp.Api.Controllers
             _context = context;
         }
 
+        // GET: api/contactsubcategories
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ContactSubcategory>>> GetContactSubcategories()
         {
+            // Return the entire list of subcategories (no filtering or pagination)
             return await _context.ContactSubcategories.ToListAsync();
         }
     }
